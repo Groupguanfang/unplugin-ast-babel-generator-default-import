@@ -33,6 +33,7 @@ const input = Object.fromEntries(
 /** @type {import("rollup").InputPluginOption} */
 const commonPlugins = [
   ast.rollup({
+    // I don't change the AST, but it throw type error
     transformer: [
       {
         transform(node) {
