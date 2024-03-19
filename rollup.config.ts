@@ -6,13 +6,12 @@ import { dirname, extname, relative, resolve } from "path";
 import { fileURLToPath } from "url";
 import alias from "@rollup/plugin-alias";
 import dts from "rollup-plugin-dts";
-import terser from "@rollup/plugin-terser";
 import ast from "unplugin-ast";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const paths = [];
+const paths: string[] = [];
 const input = Object.fromEntries(
   sync("src/**/*", { absolute: true })
     .map((file) => {
@@ -33,9 +32,14 @@ const input = Object.fromEntries(
 /** @type {import("rollup").InputPluginOption} */
 const commonPlugins = [
   ast.rollup({
-    // I don't change the AST, but it throw type error
     transformer: [
+      // Try to transform decorators
+      // 转个装饰器试试
       {
+        onNode(node) {
+          if (node.type === "Decorator") return true;
+          return false;
+        },
         transform(node) {
           return node;
         },
@@ -50,7 +54,7 @@ const commonPlugins = [
   }),
   swc({
     swc: {
-      jsc: { target: "es6" },
+      jsc: { target: "es2015" },
       swcrc: true,
     },
   }),
@@ -94,30 +98,6 @@ export default defineConfig([
     output: {
       dir: "lib/types",
       preserveModules: true,
-      preserveModulesRoot: "src",
-    },
-  },
-  // 生成压缩版IIFE
-  {
-    input,
-    plugins: [...commonPlugins, terser()],
-    output: {
-      format: "iife",
-      dir: "lib",
-      entryFileNames: "my-library.min.js",
-      name: "MyLibrary",
-      preserveModulesRoot: "src",
-    },
-  },
-  // 生成正常IIFE
-  {
-    input,
-    plugins: commonPlugins,
-    output: {
-      format: "iife",
-      dir: "lib",
-      entryFileNames: "my-library.js",
-      name: "MyLibrary",
       preserveModulesRoot: "src",
     },
   },
